@@ -1,0 +1,420 @@
+.
+├── INSTALL.md
+├── install.sh
+├── INSTALL_win.md
+├── LICENSE
+├── ltr
+│   ├── actors
+│   │   ├── base_actor.py
+│   │   ├── bbreg.py
+│   │   ├── __init__.py
+│   │   ├── segmentation.py
+│   │   └── tracking.py
+│   ├── admin
+│   │   ├── environment.py
+│   │   ├── __init__.py
+│   │   ├── loading.py
+│   │   ├── local.py
+│   │   ├── model_constructor.py
+│   │   ├── multigpu.py
+│   │   ├── settings.py
+│   │   ├── stats.py
+│   │   └── tensorboard.py
+│   ├── data
+│   │   ├── bounding_box_utils.py
+│   │   ├── image_loader.py
+│   │   ├── __init__.py
+│   │   ├── loader.py
+│   │   ├── processing.py
+│   │   ├── processing_utils.py
+│   │   ├── sampler.py
+│   │   └── transforms.py
+│   ├── dataset
+│   │   ├── base_image_dataset.py
+│   │   ├── base_video_dataset.py
+│   │   ├── coco_mot_seq.py
+│   │   ├── coco.py
+│   │   ├── coco_seq.py
+│   │   ├── davis.py
+│   │   ├── ecssd.py
+│   │   ├── got10k.py
+│   │   ├── got10kvos.py
+│   │   ├── hku_is.py
+│   │   ├── imagenetvid_mot.py
+│   │   ├── imagenetvid.py
+│   │   ├── __init__.py
+│   │   ├── lasot_candidate_matching.py
+│   │   ├── lasot.py
+│   │   ├── lasotvos.py
+│   │   ├── lvis.py
+│   │   ├── msra10k.py
+│   │   ├── sbd.py
+│   │   ├── synthetic_video_blend.py
+│   │   ├── synthetic_video.py
+│   │   ├── tao_burst.py
+│   │   ├── tracking_net.py
+│   │   ├── vos_base.py
+│   │   └── youtubevos.py
+│   ├── data_specs
+│   │   ├── got10k_train_split.txt
+│   │   ├── got10k_val_split.txt
+│   │   ├── got10k_vot_exclude.txt
+│   │   ├── got10k_vot_train_split.txt
+│   │   ├── got10k_vot_val_split.txt
+│   │   ├── imagenetvid_mot_train_split.txt
+│   │   ├── imagenetvid_mot_val_split.txt
+│   │   ├── lasot_train_split.txt
+│   │   ├── lasot_train_train_split.txt
+│   │   ├── lasot_train_val_split.txt
+│   │   ├── trackingnet_classmap.txt
+│   │   ├── youtubevos_jjtrain.txt
+│   │   └── youtubevos_jjvalid.txt
+│   ├── external
+│   │   └── PreciseRoIPooling
+│   │       ├── _assets
+│   │       │   └── prroi_visualization.png
+│   │       ├── LICENSE
+│   │       ├── pytorch
+│   │       │   ├── prroi_pool
+│   │       │   │   ├── functional.py
+│   │       │   │   ├── __init__.py
+│   │       │   │   ├── prroi_pool.py
+│   │       │   │   └── src
+│   │       │   │       ├── prroi_pooling_gpu.c
+│   │       │   │       ├── prroi_pooling_gpu.h
+│   │       │   │       ├── prroi_pooling_gpu_impl.cu -> ../../../src/prroi_pooling_gpu_impl.cu
+│   │       │   │       └── prroi_pooling_gpu_impl.cuh -> ../../../src/prroi_pooling_gpu_impl.cuh
+│   │       │   └── tests
+│   │       │       └── test_prroi_pooling2d.py
+│   │       ├── README.md
+│   │       └── src
+│   │           ├── prroi_pooling_gpu_impl.cu
+│   │           └── prroi_pooling_gpu_impl.cuh
+│   ├── __init__.py
+│   ├── models
+│   │   ├── backbone
+│   │   │   ├── base.py
+│   │   │   ├── __init__.py
+│   │   │   ├── mobilenetv3.py
+│   │   │   ├── resnet18_vggm.py
+│   │   │   ├── resnet_mrcnn.py
+│   │   │   ├── resnet.py
+│   │   │   └── swin_transformer_flex.py
+│   │   ├── bbreg
+│   │   │   ├── atom_iou_net.py
+│   │   │   ├── atom.py
+│   │   │   └── __init__.py
+│   │   ├── __init__.py
+│   │   ├── kys
+│   │   │   ├── conv_gru.py
+│   │   │   ├── cost_volume.py
+│   │   │   ├── __init__.py
+│   │   │   ├── predictor_wrapper.py
+│   │   │   ├── response_predictor.py
+│   │   │   └── utils.py
+│   │   ├── layers
+│   │   │   ├── activation.py
+│   │   │   ├── blocks.py
+│   │   │   ├── distance.py
+│   │   │   ├── filter.py
+│   │   │   ├── __init__.py
+│   │   │   ├── normalization.py
+│   │   │   └── transform.py
+│   │   ├── loss
+│   │   │   ├── bbr_loss.py
+│   │   │   ├── __init__.py
+│   │   │   ├── kl_regression.py
+│   │   │   ├── lovasz_loss.py
+│   │   │   ├── segmentation.py
+│   │   │   ├── target_candidate_matching_loss.py
+│   │   │   └── target_classification.py
+│   │   ├── lwl
+│   │   │   ├── decoder.py
+│   │   │   ├── initializer.py
+│   │   │   ├── __init__.py
+│   │   │   ├── label_encoder.py
+│   │   │   ├── linear_filter.py
+│   │   │   ├── loss_residual_modules.py
+│   │   │   ├── lwl_box_net.py
+│   │   │   ├── lwl_net.py
+│   │   │   ├── sta_net.py
+│   │   │   └── utils.py
+│   │   ├── meta
+│   │   │   ├── __init__.py
+│   │   │   └── steepestdescent.py
+│   │   ├── rts
+│   │   │   ├── decoder.py
+│   │   │   ├── initializer.py
+│   │   │   ├── __init__.py
+│   │   │   ├── label_encoder.py
+│   │   │   ├── learners_fusion.py
+│   │   │   ├── linear_filter.py
+│   │   │   ├── loss_residual_modules.py
+│   │   │   ├── rts_net.py
+│   │   │   └── utils.py
+│   │   ├── target_candidate_matching
+│   │   │   ├── __init__.py
+│   │   │   ├── superglue.py
+│   │   │   └── target_candidate_matching.py
+│   │   ├── target_classifier
+│   │   │   ├── features.py
+│   │   │   ├── initializer.py
+│   │   │   ├── __init__.py
+│   │   │   ├── linear_filter.py
+│   │   │   ├── optimizer.py
+│   │   │   └── residual_modules.py
+│   │   ├── tracking
+│   │   │   ├── dimpnet.py
+│   │   │   ├── __init__.py
+│   │   │   ├── kysnet.py
+│   │   │   ├── tamosnet.py
+│   │   │   └── tompnet.py
+│   │   └── transformer
+│   │       ├── filter_predictor.py
+│   │       ├── heads.py
+│   │       ├── __init__.py
+│   │       ├── position_encoding.py
+│   │       └── transformer.py
+│   ├── README.md
+│   ├── run_training.py
+│   ├── trainers
+│   │   ├── base_trainer.py
+│   │   ├── __init__.py
+│   │   └── ltr_trainer.py
+│   └── train_settings
+│       ├── bbreg
+│       │   ├── atom_gmm_sampl.py
+│       │   ├── atom_paper.py
+│       │   ├── atom_prob_ml.py
+│       │   ├── atom.py
+│       │   └── __init__.py
+│       ├── dimp
+│       │   ├── dimp18.py
+│       │   ├── dimp50.py
+│       │   ├── __init__.py
+│       │   ├── prdimp18.py
+│       │   ├── prdimp50.py
+│       │   ├── super_dimp.py
+│       │   └── super_dimp_simple.py
+│       ├── __init__.py
+│       ├── keep_track
+│       │   ├── __init__.py
+│       │   └── keep_track.py
+│       ├── kys
+│       │   ├── __init__.py
+│       │   └── kys.py
+│       ├── lwl
+│       │   ├── __init__.py
+│       │   ├── lwl_boxinit.py
+│       │   ├── lwl_stage1.py
+│       │   └── lwl_stage2.py
+│       ├── rts
+│       │   ├── __init__.py
+│       │   └── rts50.py
+│       ├── tamos
+│       │   ├── __init__.py
+│       │   ├── tamos_resnet50.py
+│       │   └── tamos_swin_base.py
+│       └── tomp
+│           ├── __init__.py
+│           ├── tomp101.py
+│           └── tomp50.py
+├── MODEL_ZOO.md
+├── pytracking
+│   ├── analysis
+│   │   ├── evaluate_vos.py
+│   │   ├── extract_results.py
+│   │   ├── __init__.py
+│   │   ├── playback_results.py
+│   │   ├── plot_results.py
+│   │   └── vos_utils.py
+│   ├── evaluation
+│   │   ├── avistdataset.py
+│   │   ├── data.py
+│   │   ├── dataset_attribute_specs
+│   │   │   ├── avist_attributes.json
+│   │   │   ├── avist_scenarios.json
+│   │   │   ├── LaSOT_attributes.json
+│   │   │   ├── otb_attributes.json
+│   │   │   └── UAV123_attributes.json
+│   │   ├── datasets.py
+│   │   ├── environment.py
+│   │   ├── got10kdataset.py
+│   │   ├── __init__.py
+│   │   ├── lagotdataset.py
+│   │   ├── lasotdataset.py
+│   │   ├── lasotextensionsubsetdataset.py
+│   │   ├── local.py
+│   │   ├── mobifacedataset.py
+│   │   ├── multi_object_wrapper.py
+│   │   ├── nfsdataset.py
+│   │   ├── otbdataset.py
+│   │   ├── oxuvadataset.py
+│   │   ├── running.py
+│   │   ├── tpldataset.py
+│   │   ├── tracker.py
+│   │   ├── trackingnetdataset.py
+│   │   ├── uavdataset.py
+│   │   ├── vot2020.py
+│   │   ├── votdataset.py
+│   │   └── vot.py
+│   ├── experiments
+│   │   ├── __init__.py
+│   │   └── myexperiments.py
+│   ├── features
+│   │   ├── augmentation.py
+│   │   ├── color.py
+│   │   ├── deep.py
+│   │   ├── extractor.py
+│   │   ├── featurebase.py
+│   │   ├── __init__.py
+│   │   ├── net_wrappers.py
+│   │   ├── preprocessing.py
+│   │   └── util.py
+│   ├── __init__.py
+│   ├── libs
+│   │   ├── complex.py
+│   │   ├── dcf.py
+│   │   ├── fourier.py
+│   │   ├── __init__.py
+│   │   ├── operation.py
+│   │   ├── optimization.py
+│   │   ├── tensordict.py
+│   │   └── tensorlist.py
+│   ├── networks
+│   │   ├── atom_default.pth
+│   │   ├── dimp50.pth
+│   │   ├── download.sh
+│   │   ├── keep_track.pth.tar
+│   │   ├── lwl_boxinit.pth
+│   │   ├── lwl_stage2.pth
+│   │   ├── resnet18_vggmconv1.pth
+│   │   ├── rts50.pth
+│   │   ├── sta.pth.tar
+│   │   ├── super_dimp.pth.tar
+│   │   ├── tamos_resnet50.pth.tar
+│   │   ├── tamos_swin_base.pth.tar
+│   │   ├── tomp101.pth.tar
+│   │   └── tomp50.pth.tar
+│   ├── notebooks
+│   │   ├── analyze_avist_results.ipynb
+│   │   └── analyze_results.ipynb
+│   ├── outputvideo.avi
+│   ├── parameter
+│   │   ├── atom
+│   │   │   ├── atom_gmm_sampl.py
+│   │   │   ├── atom_prob_ml.py
+│   │   │   ├── default.py
+│   │   │   ├── default_vot.py
+│   │   │   ├── __init__.py
+│   │   │   └── multiscale_no_iounet.py
+│   │   ├── dimp
+│   │   │   ├── dimp18.py
+│   │   │   ├── dimp18_vot18.py
+│   │   │   ├── dimp50.py
+│   │   │   ├── dimp50_vot18.py
+│   │   │   ├── dimp50_vot19.py
+│   │   │   ├── __init__.py
+│   │   │   ├── prdimp18.py
+│   │   │   ├── prdimp50.py
+│   │   │   ├── prdimp50_vot18.py
+│   │   │   └── super_dimp.py
+│   │   ├── dimp_simple
+│   │   │   ├── __init__.py
+│   │   │   └── super_dimp_simple.py
+│   │   ├── eco
+│   │   │   ├── default.py
+│   │   │   ├── __init__.py
+│   │   │   └── mobile3.py
+│   │   ├── __init__.py
+│   │   ├── keep_track
+│   │   │   ├── default_fast.py
+│   │   │   ├── default.py
+│   │   │   └── __init__.py
+│   │   ├── kys
+│   │   │   ├── default.py
+│   │   │   ├── default_vot.py
+│   │   │   └── __init__.py
+│   │   ├── lwl
+│   │   │   ├── __init__.py
+│   │   │   ├── lwl_boxinit.py
+│   │   │   └── lwl_ytvos.py
+│   │   ├── rts
+│   │   │   ├── __init__.py
+│   │   │   └── rts50.py
+│   │   ├── tamos
+│   │   │   ├── __init__.py
+│   │   │   ├── tamos_resnet50.py
+│   │   │   └── tamos_swin_base.py
+│   │   └── tomp
+│   │       ├── __init__.py
+│   │       ├── tomp101.py
+│   │       └── tomp50.py
+│   ├── pycallgraph.png
+│   ├── README.md
+│   ├── run_experiment.py
+│   ├── run_tracker.py
+│   ├── run_video.py
+│   ├── run_vot.py
+│   ├── run_webcam.py
+│   ├── tracker
+│   │   ├── atom
+│   │   │   ├── atom.py
+│   │   │   ├── __init__.py
+│   │   │   └── optim.py
+│   │   ├── base
+│   │   │   ├── basetracker.py
+│   │   │   └── __init__.py
+│   │   ├── dimp
+│   │   │   ├── dimp.py
+│   │   │   └── __init__.py
+│   │   ├── dimp_simple
+│   │   │   ├── dimp_simple.py
+│   │   │   └── __init__.py
+│   │   ├── eco
+│   │   │   ├── eco.py
+│   │   │   ├── __init__.py
+│   │   │   └── optim.py
+│   │   ├── __init__.py
+│   │   ├── keep_track
+│   │   │   ├── candidates.py
+│   │   │   ├── __init__.py
+│   │   │   └── keep_track.py
+│   │   ├── kys
+│   │   │   ├── __init__.py
+│   │   │   └── kys.py
+│   │   ├── lwl
+│   │   │   ├── __init__.py
+│   │   │   └── lwl.py
+│   │   ├── rts
+│   │   │   ├── clf_branch.py
+│   │   │   ├── __init__.py
+│   │   │   ├── rts.py
+│   │   │   └── sta_helper.py
+│   │   ├── tamos
+│   │   │   ├── __init__.py
+│   │   │   └── tamos.py
+│   │   └── tomp
+│   │       ├── __init__.py
+│   │       └── tomp.py
+│   ├── utils
+│   │   ├── convert_vot_anno_to_rect.py
+│   │   ├── __init__.py
+│   │   ├── loading.py
+│   │   ├── load_text.py
+│   │   ├── params.py
+│   │   ├── plotting.py
+│   │   └── visdom.py
+│   ├── util_scripts
+│   │   ├── create_distractor_dataset.py
+│   │   ├── download_results.py
+│   │   ├── __init__.py
+│   │   ├── pack_got10k_results.py
+│   │   └── pack_trackingnet_results.py
+│   └── VOT
+│       ├── tracker_DiMP.m
+│       ├── trackers.ini
+│       └── vot.py
+└── README.md
+
+72 directories, 345 files
