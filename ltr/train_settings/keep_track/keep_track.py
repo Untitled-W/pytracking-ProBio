@@ -1,6 +1,6 @@
 import os
 import torch.optim as optim
-from ltr.dataset import LasotCandidateMatching
+from ltr.dataset import LasotCandidateMatching, Got10k
 from ltr.data import processing, sampler, LTRLoader
 from ltr.models.target_candidate_matching import target_candidate_matching as tcm
 import  ltr.models.loss.target_candidate_matching_loss  as tcm_loss
@@ -16,7 +16,7 @@ def run(settings):
     settings.batch_size = 64
     settings.num_workers = 8
     settings.multi_gpu = False
-    settings.print_interval = 1
+    settings.print_interval = 200
     settings.normalize_mean = [0.485, 0.456, 0.406]
     settings.normalize_std = [0.229, 0.224, 0.225]
     settings.search_area_factor = 6.0
@@ -28,14 +28,23 @@ def run(settings):
     settings.scale_jitter_factor = {'train': 0.25, 'test': 0.5}
     settings.hinge_threshold = 0.05
 
+    # # Train datasets
+    # lasot_dumped_train = LasotCandidateMatching(settings.env.lasot_dir,
+    #                                             settings.env.lasot_candidate_matching_dataset_path, split='train-train')
+
+    # # Validation datasets
+    # lasot_dumped_val = LasotCandidateMatching(settings.env.lasot_dir,
+    #                                           settings.env.lasot_candidate_matching_dataset_path, split='train-val')
+
     # Train datasets
-    lasot_dumped_train = LasotCandidateMatching(settings.env.lasot_dir,
-                                                settings.env.lasot_candidate_matching_dataset_path, split='train-train')
+    # lasot_train = Lasot(settings.env.lasot_dir, split='train')
+    got10k_train = Got10k(settings.env.got10k_dir, split='probio_train')
+    # trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
+    # coco_train = MSCOCOSeq(settings.env.coco_dir)
+    # probio = YouTubeVOS(settings.env.ytvos_dir, split='probio')
 
     # Validation datasets
-    lasot_dumped_val = LasotCandidateMatching(settings.env.lasot_dir,
-                                              settings.env.lasot_candidate_matching_dataset_path, split='train-val')
-
+    got10k_val = Got10k(settings.env.got10k_dir, split='probio_valid')
 
     transform_train = tfm.Transform(tfm.ToTensor(),
                                     tfm.Normalize(mean=settings.normalize_mean, std=settings.normalize_std))
@@ -55,25 +64,25 @@ def run(settings):
                                                                       real_target_candidates_only=True)
 
     # Train sampler and loader
-    dataset_train = sampler.SequentialTargetCandidateMatchingSampler(lasot_dumped_train,
+    dataset_train = sampler.SequentialTargetCandidateMatchingSampler(got10k_train,
                                                                      samples_per_epoch=int(settings.batch_size*100),
                                                                      processing=processing_train, sup_modes=['self_sup','partial_sup'],
                                                                      frame_modes=['H', 'K', 'J'], p_frame_modes=[1., 0.5, 0.5],
                                                                      subseq_modes=['HH','HK','HG'], p_subseq_modes=[1.0, 0.1, 0.1])
 
-    dataset_val = sampler.SequentialTargetCandidateMatchingSampler(lasot_dumped_val,
+    dataset_val = sampler.SequentialTargetCandidateMatchingSampler(got10k_val,
                                                                   samples_per_epoch=int(settings.batch_size * 10),
                                                                   processing=processing_val, sup_modes=['self_sup'],
                                                                   frame_modes=['G', 'H', 'J', 'K'],
                                                                   p_frame_modes=[0.2, 0.4, 0.2, 0.2])
 
-    dataset_val_realHH = sampler.SequentialTargetCandidateMatchingSampler(lasot_dumped_val,
+    dataset_val_realHH = sampler.SequentialTargetCandidateMatchingSampler(got10k_val,
                                                                           samples_per_epoch=int(settings.batch_size * 5),
                                                                           processing=processing_val_real, sup_modes=['partial_sup'],
                                                                           subseq_modes=['HH'],
                                                                           p_subseq_modes=[1.])
 
-    dataset_val_realHK = sampler.SequentialTargetCandidateMatchingSampler(lasot_dumped_val,
+    dataset_val_realHK = sampler.SequentialTargetCandidateMatchingSampler(got10k_val,
                                                                           samples_per_epoch=int(settings.batch_size * 2),
                                                                           processing=processing_val_real, sup_modes=['partial_sup'],
                                                                           subseq_modes=['HK'],
@@ -122,4 +131,4 @@ def run(settings):
 
     trainer = LTRTrainer(actor, loader, optimizer, settings, lr_scheduler)
 
-    trainer.train(15, load_latest=True, fail_safe=True)
+    trainer.train(25, load_latest=True, fail_safe=True)

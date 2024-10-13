@@ -86,7 +86,7 @@ class MultiObjectWrapper:
             if key == 'segmentation':
                 pass
             else:
-                out_merged[key] = {obj_id: out[key] for obj_id, out in out_all.items()}
+                out_merged[key] = {obj_id: 0 if key not in out else out[key] for obj_id, out in out_all.items()}
 
         return out_merged
 
@@ -115,6 +115,7 @@ class MultiObjectWrapper:
         for obj_id in info['init_object_ids']:
             start_time = time.time()
             out = self.trackers[obj_id].initialize(image, init_info_split[obj_id])
+            print(f'Initialized tracker {obj_id} in {time.time() - start_time:.3f} seconds')
             if out is None:
                 out = {}
 
@@ -176,6 +177,7 @@ class MultiObjectWrapper:
             self.initialized_ids.extend(info['init_object_ids'])
 
         # Merge results
+        # print("!!",out_all)
         out_merged = self.merge_outputs(out_all)
 
         return out_merged

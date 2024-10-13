@@ -10,7 +10,7 @@ conda_env_name=$2
 
 source $conda_install_path/etc/profile.d/conda.sh
 echo "****************** Creating conda environment ${conda_env_name} python=3.7 ******************"
-conda create -y --name $conda_env_name
+conda create -y --name $conda_env_name python=3.7
 
 echo ""
 echo ""
@@ -20,7 +20,7 @@ conda activate $conda_env_name
 echo ""
 echo ""
 echo "****************** Installing pytorch with cuda10 ******************"
-conda install -y pytorch torchvision cudatoolkit=10.0 -c pytorch
+# conda install -y pytorch torchvision cudatoolkit=10.0 -c pytorch
 
 echo ""
 echo ""
@@ -107,7 +107,7 @@ mkdir pytracking/networks
 echo ""
 echo ""
 echo "****************** DiMP50 Network ******************"
-gdown https://drive.google.com/uc\?id\=1qgachgqks2UGjKx-GdO1qylBDdB1f9KN -O pytracking/networks/dimp50.pth
+# gdown https://drive.google.com/uc\?id\=1qgachgqks2UGjKx-GdO1qylBDdB1f9KN -O pytracking/networks/dimp50.pth
 # gdown https://drive.google.com/uc\?id\=1MAjrRJDCbL0DSjUKFyDkUuYS1-cYBNjk -O pytracking/networks/dimp18.pth
 
 # echo ""

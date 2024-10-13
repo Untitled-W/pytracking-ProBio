@@ -46,8 +46,12 @@ class TaMOs(BaseTracker):
         # The DiMP network
         self.net = self.params.net
 
-        # self.max_num_objs = 10
+        # self.max_num_objs = 20
         self.max_num_objs = self.net.net.head.filter_predictor.num_tokens
+        # print(f"self.net: {self.net}")
+        # print(f"self.net.net: {self.net.net}")
+        # print(f"self.net.net.head: {self.net.net.head}")
+        print(f"self.net.net.head.filter_predictor: {self.net.net.head.filter_predictor}")
 
         # Time initialization
         tic = time.time()
@@ -466,6 +470,8 @@ class TaMOs(BaseTracker):
         """Get the target bounding boxes for the initial augmented samples."""
         self.classifier_target_box = OrderedDict({obj_id: self.get_iounet_box(self.pos[obj_id], self.target_sz[obj_id], self.scale_factor) for obj_id in self.pos.keys()})
         init_target_boxes = torch.zeros(self.max_num_objs, 4).to(self.params.device)
+        # print('Classifier target box:',self.classifier_target_box)
+        # print(self.max_num_objs)
         for obj_id, box in self.classifier_target_box.items():
             init_target_boxes[obj_id - 1] = box.to(self.params.device)
         self.target_boxes = init_target_boxes.new_zeros(self.params.sample_memory_size, self.max_num_objs, 4)

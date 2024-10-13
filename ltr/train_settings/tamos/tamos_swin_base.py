@@ -15,13 +15,13 @@ import numpy as np
 
 def run(settings):
     settings.description = 'TaMOs-Swin-Base'
-    settings.multi_gpu = True
+    settings.multi_gpu = False
     settings.batch_size = 6 * torch.cuda.device_count()
     settings.num_workers = 2 * torch.cuda.device_count()
     fail_safe = True
     load_latest = True
 
-    settings.print_interval = 10
+    settings.print_interval = 100
     settings.save_checkpoint_freq = 10
     settings.normalize_mean = [0.485, 0.456, 0.406]
     settings.normalize_std = [0.229, 0.224, 0.225]
@@ -57,20 +57,30 @@ def run(settings):
     settings.grad_clip_max_norm = 0.1
     settings.max_num_objects = 10
 
-    # Train datasets
-    lasot_train = Lasot(settings.env.lasot_dir, split='train')
-    got10k_train = Got10k(settings.env.got10k_dir, split='vottrain')
-    trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
+    # # Train datasets
+    # lasot_train = Lasot(settings.env.lasot_dir, split='train')
+    # got10k_train = Got10k(settings.env.got10k_dir, split='vottrain')
+    # trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
 
-    coco_mot_train = MSCOCOMOTSeq(settings.env.coco_dir)
-    youtubevos_train = YouTubeVOS(settings.env.youtubevos_dir, multiobj=True, split='jjtrain')
-    imagenetvid_train = ImagenetVIDMOT(settings.env.imagenet_vid_gmot_dir, split='train')
-    tao_train = TAOBURST(settings.env.tao_burst_dir)
+    # coco_mot_train = MSCOCOMOTSeq(settings.env.coco_dir)
+    # youtubevos_train = YouTubeVOS(settings.env.youtubevos_dir, multiobj=True, split='jjtrain')
+    # imagenetvid_train = ImagenetVIDMOT(settings.env.imagenet_vid_gmot_dir, split='train')
+    # tao_train = TAOBURST(settings.env.tao_burst_dir)
+
+    # # Validation datasets
+    # got10k_val = Got10k(settings.env.got10k_dir, split='votval')
+    # imagenetvid_val = ImagenetVIDMOT(settings.env.imagenet_vid_gmot_dir, split='val')
+
+    # Train datasets
+    # lasot_train = Lasot(settings.env.lasot_dir, split='train')
+    got10k_train = Got10k(settings.env.got10k_dir, split='probio_train')
+    # trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
+    # coco_train = MSCOCOSeq(settings.env.coco_dir)
+    # probio = YouTubeVOS(settings.env.ytvos_dir, split='probio')
 
     # Validation datasets
-    got10k_val = Got10k(settings.env.got10k_dir, split='votval')
-    imagenetvid_val = ImagenetVIDMOT(settings.env.imagenet_vid_gmot_dir, split='val')
-
+    got10k_val = Got10k(settings.env.got10k_dir, split='probio_valid')
+    
     # Data transform
     transform_joint = tfm.Transform(tfm.ToGrayscale(probability=0.05),
                                     tfm.RandomHorizontalFlip(probability=0.5))
@@ -121,7 +131,7 @@ def run(settings):
                                                      enforce_one_sample_region_per_object=True)
 
     # Train sampler and loader
-    dataset_train = sampler.TaMOsDatasetSampler([lasot_train, trackingnet_train, got10k_train, tao_train, coco_mot_train, youtubevos_train, imagenetvid_train], [1, 1, 1, 1, 1, 1, 1],
+    dataset_train = sampler.TaMOsDatasetSampler([got10k_train,], [1],
         samples_per_epoch=settings.train_samples_per_epoch, max_gap=settings.max_gap,
         num_test_frames=settings.num_test_frames, num_train_frames=settings.num_train_frames,
         processing=data_processing_train)
@@ -140,12 +150,12 @@ def run(settings):
                                num_workers=settings.num_workers,
                                shuffle=False, drop_last=True, epoch_interval=settings.val_epoch_interval, stack_dim=1)
 
-    dataset_mot_val = sampler.TaMOsDatasetSampler([imagenetvid_val], [1], samples_per_epoch=settings.val_samples_per_epoch,
-                                                  max_gap=settings.max_gap, num_test_frames=settings.num_test_frames,
-                                                  num_train_frames=settings.num_train_frames, processing=data_processing_val)
+    # dataset_mot_val = sampler.TaMOsDatasetSampler([imagenetvid_val], [1], samples_per_epoch=settings.val_samples_per_epoch,
+    #                                               max_gap=settings.max_gap, num_test_frames=settings.num_test_frames,
+    #                                               num_train_frames=settings.num_train_frames, processing=data_processing_val)
 
-    loader_mot_val = LTRLoader('val_mot', dataset_mot_val, training=False, batch_size=settings.batch_size, num_workers=settings.num_workers,
-                               shuffle=False, drop_last=True, epoch_interval=settings.val_epoch_interval, stack_dim=1)
+    # loader_mot_val = LTRLoader('val_mot', dataset_mot_val, training=False, batch_size=settings.batch_size, num_workers=settings.num_workers,
+    #                            shuffle=False, drop_last=True, epoch_interval=settings.val_epoch_interval, stack_dim=1)
 
     # Create network and actor
     net = tamosnet.tamosnet_swin_base(filter_size=settings.target_filter_sz, backbone_pretrained=True,
@@ -178,7 +188,7 @@ def run(settings):
 
     lr_scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[150, 250], gamma=0.2)
 
-    trainer = LTRTrainer(actor, [loader_train, loader_sot_val, loader_mot_val], optimizer, settings, lr_scheduler,
+    trainer = LTRTrainer(actor, [loader_train, loader_sot_val], optimizer, settings, lr_scheduler,
                          freeze_backbone_bn_layers=settings.freeze_backbone_bn_layers)
 
-    trainer.train(settings.num_epochs, load_latest=load_latest, fail_safe=fail_safe)
+    trainer.train(310, load_latest=load_latest, fail_safe=fail_safe)

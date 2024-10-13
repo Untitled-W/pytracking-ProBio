@@ -17,6 +17,9 @@ dataset_dict = dict(
     trackingnetvos=DatasetInfo(module=pt % "trackingnet", class_name="TrackingNetDataset", kwargs=dict(vos_mode=True)),
     got10k_test=DatasetInfo(module=pt % "got10k", class_name="GOT10KDataset", kwargs=dict(split='test')),
     got10k_val=DatasetInfo(module=pt % "got10k", class_name="GOT10KDataset", kwargs=dict(split='val')),
+    got10k_probio=DatasetInfo(module=pt % "got10k", class_name="GOT10KDataset", kwargs=dict(split='probio')),
+    # got10k_probio_valid=DatasetInfo(module='ltr.dataset.got10k',class_name='Got10k',kwargs=dict(root='/mnt/data/qizhezhang/allDataset/GOT-10k/probio', split='probio_valid')),
+    got10k_probio_valid=DatasetInfo(module=pt % "got10k", class_name="GOT10KDataset",kwargs=dict(split='probio_valid')),
     got10k_ltrval=DatasetInfo(module=pt % "got10k", class_name="GOT10KDataset", kwargs=dict(split='ltrval')),
     got10kvos_val=DatasetInfo(module=pt % "got10k", class_name="GOT10KDataset", kwargs=dict(split='val', vos_mode=True)),
     lasot=DatasetInfo(module=pt % "lasot", class_name="LaSOTDataset", kwargs=dict()),
@@ -35,6 +38,14 @@ dataset_dict = dict(
                                  kwargs=dict(version='2017', split='test-challenge')),
     yt2019_test=DatasetInfo(module="ltr.dataset.youtubevos", class_name="YouTubeVOS",
                             kwargs=dict(version='2019', split='test')),
+    yt2019_sub=DatasetInfo(module="ltr.dataset.youtubevos", class_name="YouTubeVOS",
+                             kwargs=dict(version='2019', split='sub')),
+    yt_pb_train=DatasetInfo(module="ltr.dataset.youtubevos", class_name="YouTubeVOS",
+                             kwargs=dict(version='2019', split='probio_train')
+    ),
+    yt_pb_valid=DatasetInfo(module="ltr.dataset.youtubevos", class_name="YouTubeVOS",
+                             kwargs=dict(version='2019', split='probio_valid')
+    ),
     yt2019_valid=DatasetInfo(module="ltr.dataset.youtubevos", class_name="YouTubeVOS",
                              kwargs=dict(version='2019', split='valid')),
     yt2019_valid_all=DatasetInfo(module="ltr.dataset.youtubevos", class_name="YouTubeVOS",
@@ -49,6 +60,8 @@ dataset_dict = dict(
                                  kwargs=dict(version='2019', split='jjvalid', all_frames=True, cleanup=['starts'])),
     lagot_sot_mode=DatasetInfo(module=pt % "lagot", class_name="LaGOTDataset", kwargs=dict(sot_mode=True)),
     lagot=DatasetInfo(module=pt % "lagot", class_name="LaGOTDataset", kwargs=dict(sot_mode=False)),
+    probio=DatasetInfo(module="ltr.dataset.youtubevos", class_name="YouTubeVOS", 
+                       kwargs=dict(version='2019', split='probio')),
 )
 
 

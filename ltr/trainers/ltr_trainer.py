@@ -149,5 +149,5 @@ class LTRTrainer(BaseTrainer):
     def _write_tensorboard(self):
         if self.epoch == 1:
             self.tensorboard_writer.write_info(self.settings.module_name, self.settings.script_name, self.settings.description)
-
+        
         self.tensorboard_writer.write_epoch(self.stats, self.epoch)

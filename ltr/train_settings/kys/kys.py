@@ -17,7 +17,7 @@ def run(settings):
     settings.batch_size = 10
     settings.test_sequence_length = 50
     settings.num_workers = 8
-    settings.print_interval = 1
+    settings.print_interval = 200
     settings.normalize_mean = [0.485, 0.456, 0.406]
     settings.normalize_std = [0.229, 0.224, 0.225]
     settings.search_area_factor = 5.0
@@ -34,12 +34,15 @@ def run(settings):
                             'Loss/raw/test_seq_acc',
                             'Loss/raw/dimp_seq_acc']
 
-    lasot_train = Lasot(settings.env.lasot_dir, split='train')
-    got10k_train = Got10k(settings.env.got10k_dir, split='vottrain')
-    trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=[0, 1, 2, 3, 4])
+    # Train datasets
+    # lasot_train = Lasot(settings.env.lasot_dir, split='train')
+    got10k_train = Got10k(settings.env.got10k_dir, split='probio_train')
+    # trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
+    # coco_train = MSCOCOSeq(settings.env.coco_dir)
+    # probio = YouTubeVOS(settings.env.ytvos_dir, split='probio')
 
     # Validation datasets
-    got10k_val = Got10k(settings.env.got10k_dir, split='votval')
+    got10k_val = Got10k(settings.env.got10k_dir, split='probio_valid')
 
     # Data transform
     transform_joint = tfm.Transform(tfm.ToGrayscale(probability=0.05))
@@ -83,8 +86,8 @@ def run(settings):
                             'max_train_gap': 30, 'allow_missing_target': True, 'min_fraction_valid_frames': 0.5,
                             'mode': 'Sequence'}
 
-    dataset_train = sampler.KYSSampler([got10k_train, trackingnet_train, lasot_train],
-                                       [0.3, 0.3, 0.25],
+    dataset_train = sampler.KYSSampler([got10k_train],
+                                       [1],
                                        samples_per_epoch=settings.batch_size * 150,
                                        sequence_sample_info=sequence_sample_info,
                                        processing=data_processing_train,
@@ -145,4 +148,4 @@ def run(settings):
 
     trainer = LTRTrainer(actor, [loader_train, loader_val], optimizer, settings, lr_scheduler)
 
-    trainer.train(40, load_latest=True, fail_safe=True)
+    trainer.train(50, load_latest=True, fail_safe=True)

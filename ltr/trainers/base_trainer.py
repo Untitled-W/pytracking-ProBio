@@ -60,7 +60,7 @@ class BaseTrainer:
         epoch = -1
         num_tries = 10
         for i in range(num_tries):
-            try:
+            # try:
                 if load_latest:
                     self.load_checkpoint()
 
@@ -74,16 +74,16 @@ class BaseTrainer:
 
                     if self._checkpoint_dir:
                         self.save_checkpoint()
-            except:
-                print('Training crashed at epoch {}'.format(epoch))
-                if fail_safe:
-                    self.epoch -= 1
-                    load_latest = True
-                    print('Traceback for the error!')
-                    print(traceback.format_exc())
-                    print('Restarting training from last epoch ...')
-                else:
-                    raise
+            # except:
+            #     print('Training crashed at epoch {}'.format(epoch))
+            #     if fail_safe:
+            #         self.epoch -= 1
+            #         load_latest = True
+            #         print('Traceback for the error!')
+            #         print(traceback.format_exc())
+            #         print('Restarting training from last epoch ...')
+            #     else:
+            #         raise
 
         print('Finished training!')
 
@@ -120,7 +120,7 @@ class BaseTrainer:
         tmp_file_path = '{}/{}_ep{:04d}.tmp'.format(directory, net_type, self.epoch)
         torch.save(state, tmp_file_path)
 
-        file_path = '{}/{}_ep{:04d}.pth.tar'.format(directory, net_type, self.epoch)
+        file_path = '{}/{}_ep{:04d}.pth'.format(directory, net_type, self.epoch)
 
         # Now rename to actual checkpoint. os.rename seems to be atomic if files are on same filesystem. Not 100% sure
         os.rename(tmp_file_path, file_path)
@@ -145,13 +145,15 @@ class BaseTrainer:
 
         if checkpoint is None:
             # Load most recent checkpoint
-            checkpoint_list = sorted(glob.glob('{}/{}/{}_ep*.pth.tar'.format(self._checkpoint_dir,
+            checkpoint_list = sorted(glob.glob('{}/{}/{}_ep*.pth'.format(self._checkpoint_dir,
                                                                              self.settings.project_path, net_type)))
             if checkpoint_list:
                 checkpoint_path = checkpoint_list[-1]
             else:
-                print('No matching checkpoint file found')
+                print('No matching checkpoint file found:')
+                print('{}/{}/{}_ep*.pth'.format(self._checkpoint_dir,self.settings.project_path, net_type))
                 return
+            
         elif isinstance(checkpoint, int):
             # Checkpoint is the epoch number
             checkpoint_path = '{}/{}/{}_ep{:04d}.pth.tar'.format(self._checkpoint_dir, self.settings.project_path,
@@ -170,9 +172,11 @@ class BaseTrainer:
             raise TypeError
 
         # Load network
+        print('Loading checkpoint: {}'.format(checkpoint_path))
         checkpoint_dict = loading.torch_load_legacy(checkpoint_path)
+        print(checkpoint_dict['net_type'])
 
-        assert net_type == checkpoint_dict['net_type'], 'Network is not of correct type.'
+        # assert net_type == checkpoint_dict['net_type'], 'Network is not of correct type.'
 
         if fields is None:
             fields = checkpoint_dict.keys()
@@ -187,9 +191,13 @@ class BaseTrainer:
             if key in ignore_fields:
                 continue
             if key == 'net':
-                net.load_state_dict(checkpoint_dict[key])
+                net.load_state_dict(checkpoint_dict[key], strict=False)
             elif key == 'optimizer':
-                self.optimizer.load_state_dict(checkpoint_dict[key])
+                try:
+                    self.optimizer.load_state_dict(checkpoint_dict[key])
+                except:
+                    print("Cannot load optimizer")
+                    continue
             else:
                 setattr(self, key, checkpoint_dict[key])
 

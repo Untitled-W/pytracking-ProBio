@@ -257,7 +257,7 @@ class Tracker:
 
         return output
 
-    def run_video_generic(self, debug=None, visdom_info=None, videofilepath=None, optional_box=None, save_results=False):
+    def run_video_generic_with_cv2(self, debug=None, visdom_info=None, videofilepath=None, optional_box=None, save_results=False):
         """Run the tracker with the webcam or a provided video file.
         args:
             debug: Debug level.
@@ -448,6 +448,201 @@ class Tracker:
         # When everything done, release the capture
         cap.release()
         cv.destroyAllWindows()
+
+        if save_results:
+            if not os.path.exists(self.results_dir):
+                os.makedirs(self.results_dir)
+            video_name = "webcam" if videofilepath is None else Path(videofilepath).stem
+            base_results_path = os.path.join(self.results_dir, 'video_{}'.format(video_name))
+            print(f"Save results to: {base_results_path}")
+            for obj_id, bbox in output_boxes.items():
+                tracked_bb = np.array(bbox).astype(int)
+                bbox_file = '{}_{}.txt'.format(base_results_path, obj_id)
+                np.savetxt(bbox_file, tracked_bb, delimiter='\t', fmt='%d')
+
+    def run_video_generic(self, debug=None, visdom_info=None, videofilepath=None, optional_box=None, save_results=False):
+        """Run the tracker with the webcam or a provided video file.
+        args:
+            debug: Debug level.
+        """
+        fourcc = cv.VideoWriter_fourcc(*'DIVX')
+
+        params = self.get_parameters()
+
+        debug_ = debug
+        if debug is None:
+            debug_ = getattr(params, 'debug', 0)
+        params.debug = debug_
+
+        params.tracker_name = self.name
+        params.param_name = self.parameter_name
+
+        self._init_visdom(visdom_info, debug_)
+
+        multiobj_mode = getattr(params, 'multiobj_mode', getattr(self.tracker_class, 'multiobj_mode', 'default'))
+
+        if multiobj_mode == 'default':
+            tracker = self.create_tracker(params)
+            if hasattr(tracker, 'initialize_features'):
+                tracker.initialize_features()
+        elif multiobj_mode == 'parallel':
+            tracker = MultiObjectWrapper(self.tracker_class, params, self.visdom, fast_load=True)
+        else:
+            raise ValueError('Unknown multi object mode {}'.format(multiobj_mode))
+
+        class UIControl:
+            def __init__(self):
+                self.mode = 'init'  # init, select, track
+                self.target_tl = (-1, -1)
+                self.target_br = (-1, -1)
+                self.new_init = False
+
+            def mouse_callback(self, event, x, y, flags, param):
+                if event == cv.EVENT_LBUTTONDOWN and self.mode == 'init':
+                    self.target_tl = (x, y)
+                    self.target_br = (x, y)
+                    self.mode = 'select'
+                elif event == cv.EVENT_MOUSEMOVE and self.mode == 'select':
+                    self.target_br = (x, y)
+                elif event == cv.EVENT_LBUTTONDOWN and self.mode == 'select':
+                    self.target_br = (x, y)
+                    self.mode = 'init'
+                    self.new_init = True
+
+            def get_tl(self):
+                return self.target_tl if self.target_tl[0] < self.target_br[0] else self.target_br
+
+            def get_br(self):
+                return self.target_br if self.target_tl[0] < self.target_br[0] else self.target_tl
+
+            def get_bb(self):
+                tl = self.get_tl()
+                br = self.get_br()
+
+                bb = [min(tl[0], br[0]), min(tl[1], br[1]), abs(br[0] - tl[0]), abs(br[1] - tl[1])]
+                return bb
+
+        # ui_control = UIControl()
+
+        frame_number = 0
+
+        if videofilepath is not None:
+            assert os.path.isfile(videofilepath), "Invalid param {}".format(videofilepath)
+            ", videofilepath must be a valid videofile"
+            cap = cv.VideoCapture(videofilepath)
+            ret, frame = cap.read()
+            frame_number += 1
+            #cv.imshow(display_name, frame)
+        else:
+            # 打开内置摄像头
+            cap = cv.VideoCapture(0)
+            
+        resolution=frame.shape
+
+        wframe=resolution[0]
+        hframe=resolution[1]
+        imgname2=videofilepath.split('/')[-1]
+
+        videoWriter = cv.VideoWriter('output'+imgname2.split('.')[0]+'.avi', fourcc, 20.0, (hframe,wframe))
+
+
+        next_object_id = 1
+        sequence_object_ids = []
+        prev_output = OrderedDict()
+        output_boxes = OrderedDict()
+        optional_boxes = [[416, 222, 72, 142], [835, 129, 60, 139], [165, 535, 151, 111]]
+
+        boxes=OrderedDict()
+        ids=[]
+        for i,box in enumerate(optional_boxes):
+            i+=1
+            boxes.update({i:box})
+            ids.append(i)
+            output_boxes[i]=[box,]
+            sequence_object_ids.append(i)
+
+        out = tracker.initialize(frame, {'init_bbox': boxes,
+                                'init_object_ids': ids,
+                                'object_ids': ids,
+                                'sequence_object_ids': ids})
+        prev_output = OrderedDict(out)
+
+        output_boxes[next_object_id] = [optional_box, ]
+        sequence_object_ids.append(next_object_id)
+        next_object_id += 1
+
+        # Wait for initial bounding box if video!
+        paused = videofilepath is not None
+        paused=False
+        while True:
+
+            if not paused:
+                # Capture frame-by-frame
+                ret, frame = cap.read()
+                frame_number += 1
+                if frame is None:
+                    break
+
+            frame_disp = frame.copy()
+
+            info = OrderedDict()
+            info['previous_output'] = prev_output
+
+            # if ui_control.new_init:
+            #     ui_control.new_init = False
+            #     init_state = ui_control.get_bb()
+
+            #     info['init_object_ids'] = [next_object_id, ]
+            #     info['init_bbox'] = OrderedDict({next_object_id: init_state})
+            #     sequence_object_ids.append(next_object_id)
+            #     if save_results:
+            #         output_boxes[next_object_id] = [init_state, ]
+            #     next_object_id += 1
+
+            # Draw box
+            # if ui_control.mode == 'select':
+            #     cv.rectangle(frame_disp, ui_control.get_tl(), ui_control.get_br(), (255, 0, 0), 2)
+
+            if len(sequence_object_ids) > 0:
+                info['sequence_object_ids'] = sequence_object_ids
+                out = tracker.track(frame, info)
+                prev_output = OrderedDict(out)
+
+                if 'segmentation' in out:
+                    frame_disp = overlay_mask(frame_disp, out['segmentation'])
+                    mask_image = np.zeros(frame_disp.shape, dtype=frame_disp.dtype)
+
+                    if save_results:
+                        mask_image = overlay_mask(mask_image, out['segmentation'])
+                        if not os.path.exists(self.results_dir):
+                            os.makedirs(self.results_dir)
+                        cv.imwrite(self.results_dir + f"seg_{frame_number}.jpg", mask_image)
+
+                if 'target_bbox' in out:
+                    for obj_id, state in out['target_bbox'].items():
+                        state = [int(s) for s in state]
+                        cv.rectangle(frame_disp, (state[0], state[1]), (state[2] + state[0], state[3] + state[1]),
+                                     _tracker_disp_colors[obj_id], 5)
+                        if save_results:
+                            output_boxes[obj_id].append(state)
+
+            videoWriter.write(frame_disp)
+            print(f"Frame: {frame_number}")
+
+            # Put text
+            font_color = (255, 255, 255)
+            msg = "Select target(s). Press 'r' to reset or 'q' to quit."
+            #cv.rectangle(frame_disp, (5, 5), (630, 40), (50, 50, 50), -1)
+            #cv.putText(frame_disp, msg, (10, 30), cv.FONT_HERSHEY_COMPLEX_SMALL, 1, font_color, 2)
+
+            if videofilepath is not None:
+                msg = "Press SPACE to pause/resume the video."
+                #cv.rectangle(frame_disp, (5, 50), (530, 90), (50, 50, 50), -1)
+                #cv.putText(frame_disp, msg, (10, 75), cv.FONT_HERSHEY_COMPLEX_SMALL, 1, font_color, 2)
+
+        # When everything done, release the capture
+        cap.release()
+        videoWriter.release()
 
         if save_results:
             if not os.path.exists(self.results_dir):

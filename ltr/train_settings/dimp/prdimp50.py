@@ -12,10 +12,10 @@ from ltr import MultiGPU
 
 def run(settings):
     settings.description = 'Default train settings for PrDiMP with ResNet50 as backbone.'
-    settings.batch_size = 10
+    settings.batch_size = 16
     settings.num_workers = 8
     settings.multi_gpu = False
-    settings.print_interval = 1
+    settings.print_interval = 200
     settings.normalize_mean = [0.485, 0.456, 0.406]
     settings.normalize_std = [0.229, 0.224, 0.225]
     settings.search_area_factor = 5.0
@@ -29,13 +29,15 @@ def run(settings):
     settings.print_stats = ['Loss/total', 'Loss/bb_ce', 'ClfTrain/clf_ce']
 
     # Train datasets
-    lasot_train = Lasot(settings.env.lasot_dir, split='train')
-    got10k_train = Got10k(settings.env.got10k_dir, split='vottrain')
-    trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
-    coco_train = MSCOCOSeq(settings.env.coco_dir)
+    # lasot_train = Lasot(settings.env.lasot_dir, split='train')
+    got10k_train = Got10k(settings.env.got10k_dir, split='probio_train')
+    # got10k_train = Got10k(settings.env.got10k_dir, split='vottrain')
+    # trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
+    # coco_train = MSCOCOSeq(settings.env.coco_dir)
 
     # Validation datasets
-    got10k_val = Got10k(settings.env.got10k_dir, split='votval')
+    # got10k_val = Got10k(settings.env.got10k_dir, split='votval')
+    got10k_val = Got10k(settings.env.got10k_dir, split='probio_valid')
 
 
     # Data transform
@@ -76,7 +78,7 @@ def run(settings):
                                                       joint_transform=transform_joint)
 
     # Train sampler and loader
-    dataset_train = sampler.DiMPSampler([lasot_train, got10k_train, trackingnet_train, coco_train], [0.25,1,1,1],
+    dataset_train = sampler.DiMPSampler([got10k_train], [1],
                                         samples_per_epoch=26000, max_gap=200, num_test_frames=3, num_train_frames=3,
                                         processing=data_processing_train)
 
@@ -89,7 +91,7 @@ def run(settings):
                                       processing=data_processing_val)
 
     loader_val = LTRLoader('val', dataset_val, training=False, batch_size=settings.batch_size, num_workers=settings.num_workers,
-                           shuffle=False, drop_last=True, epoch_interval=5, stack_dim=1)
+                           shuffle=False, drop_last=True, epoch_interval=1, stack_dim=1)
 
     # Create network and actor
     net = dimpnet.klcedimpnet50(filter_size=settings.target_filter_sz, backbone_pretrained=True, optim_iter=5,
@@ -117,4 +119,4 @@ def run(settings):
 
     trainer = LTRTrainer(actor, [loader_train, loader_val], optimizer, settings, lr_scheduler)
 
-    trainer.train(50, load_latest=True, fail_safe=True)
+    trainer.train(55, load_latest=True, fail_safe=True)

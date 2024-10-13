@@ -11,6 +11,7 @@ from pytracking.evaluation.running import run_dataset
 from pytracking.evaluation import Tracker
 
 
+
 def run_tracker(tracker_name, tracker_param, run_id=None, dataset_name='otb', sequence=None, debug=0, threads=0,
                 visdom_info=None):
     """Run tracker on sequence or dataset.
@@ -39,18 +40,24 @@ def run_tracker(tracker_name, tracker_param, run_id=None, dataset_name='otb', se
 
 def main():
     parser = argparse.ArgumentParser(description='Run tracker on sequence or dataset.')
-    parser.add_argument('tracker_name', type=str, help='Name of tracking method.')
-    parser.add_argument('tracker_param', type=str, help='Name of parameter file.')
+    parser.add_argument('--tracker_name', type=str, help='Name of tracking method.', default='dimp')
+    parser.add_argument('--tracker_param', type=str, help='Name of parameter file.', default='dimp50')
     parser.add_argument('--runid', type=int, default=None, help='The run id.')
-    parser.add_argument('--dataset_name', type=str, default='otb', help='Name of dataset (otb, nfs, uav, tpl, vot, tn, gott, gotv, lasot).')
+    # parser.add_argument('--dataset_name', type=str, default='probio')
+    # parser.add_argument('--dataset_name', type=str, default='yt2019_sub')
+    # parser.add_argument('--dataset_name', type=str, default='got10k_probio_valid')
+    parser.add_argument('--dataset_name', type=str, default='yt_pb_valid')
+    
     parser.add_argument('--sequence', type=str, default=None, help='Sequence number or name.')
     parser.add_argument('--debug', type=int, default=0, help='Debug level.')
     parser.add_argument('--threads', type=int, default=0, help='Number of threads.')
     parser.add_argument('--use_visdom', type=bool, default=True, help='Flag to enable visdom.')
     parser.add_argument('--visdom_server', type=str, default='127.0.0.1', help='Server for visdom.')
     parser.add_argument('--visdom_port', type=int, default=8097, help='Port for visdom.')
+    parser.add_argument('--gpu', type=str, default='7', help='GPU id.')
 
     args = parser.parse_args()
+    os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
 
     try:
         seq_name = int(args.sequence)

@@ -28,6 +28,7 @@ def load_network(net_path, **kwargs):
         assert net is not None, 'Failed to load network'
     else:
         path_full = os.path.join(env_settings().network_path, net_path)
+        # print(path_full)
         net, _ = ltr_loading.load_network(path_full, **kwargs)
 
     return net

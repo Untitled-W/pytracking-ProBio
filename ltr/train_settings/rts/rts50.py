@@ -14,10 +14,10 @@ import os
 
 def run(settings):
     settings.description = 'Default train settings for training full network'
-    settings.batch_size = 15
+    settings.batch_size = 16
     settings.num_workers = 45
     settings.multi_gpu = False # RAN WITH 1 A100 GPU
-    settings.print_interval = 50
+    settings.print_interval = 500
     settings.normalize_mean = [102.9801, 115.9465, 122.7717]
     settings.normalize_std = [1.0, 1.0, 1.0]
 

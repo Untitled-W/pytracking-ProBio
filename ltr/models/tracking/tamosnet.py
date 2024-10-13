@@ -132,7 +132,7 @@ def tamosnet_resnet50(filter_size=4, head_layer='layer3', backbone_pretrained=Tr
 @model_constructor
 def tamosnet_swin_base(filter_size=4, head_layer='2', backbone_pretrained=True, head_feat_blocks=0, head_feat_norm=True,
                     final_conv=True, out_feature_dim=512, frozen_backbone_layers=(), nhead=8, num_encoder_layers=6,
-                    num_decoder_layers=6, dim_feedforward=2048, feature_sz=18, num_tokens=10, label_enc='gaussian', box_enc='ltrb',
+                    num_decoder_layers=6, dim_feedforward=2048, feature_sz=18, num_tokens=20, label_enc='gaussian', box_enc='ltrb',
                     fpn_head_cls_output_mode=['high'], fpn_head_bbreg_output_mode=['high'], **kwargs):
     # Backbone
     backbone_net = backbones.swin_base384_flex(pretrained=backbone_pretrained, frozen_layers=frozen_backbone_layers)

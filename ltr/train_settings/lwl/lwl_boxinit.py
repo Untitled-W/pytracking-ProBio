@@ -15,7 +15,7 @@ def run(settings):
     settings.batch_size = 8
     settings.num_workers = 4
     settings.multi_gpu = False
-    settings.print_interval = 1
+    settings.print_interval = 200
     settings.normalize_mean = [102.9801, 115.9465, 122.7717]
     settings.normalize_std = [1.0, 1.0, 1.0]
 
@@ -30,9 +30,9 @@ def run(settings):
 
     settings.min_target_area = 500
 
-    ytvos_train = YouTubeVOS(version="2019", multiobj=False, split='jjtrain')
-    ytvos_valid = YouTubeVOS(version="2019", multiobj=False, split='jjvalid')
-    coco_train = MSCOCOSeq()
+    ytvos_train = YouTubeVOS(version="2019", multiobj=False, split='probio_train')
+    ytvos_valid = YouTubeVOS(version="2019", multiobj=False, split='probio_valid')
+    # coco_train = MSCOCOSeq()
 
     # Data transform
     transform_joint = tfm.Transform(tfm.ToBGR(),
@@ -67,7 +67,7 @@ def run(settings):
                                                    joint_transform=transform_joint,
                                                    new_roll=True)
     # Train sampler and loader
-    dataset_train = sampler.LWLSampler([ytvos_train, coco_train], [1, 1],
+    dataset_train = sampler.LWLSampler([ytvos_train], [1],
                                        samples_per_epoch=settings.batch_size * 1000, max_gap=100,
                                        num_test_frames=1,
                                        num_train_frames=1,
@@ -128,4 +128,4 @@ def run(settings):
 
     trainer = LTRTrainer(actor, [loader_train, loader_val], optimizer, settings, lr_scheduler)
 
-    trainer.train(50, load_latest=True, fail_safe=True)
+    trainer.train(60, load_latest=True, fail_safe=True)

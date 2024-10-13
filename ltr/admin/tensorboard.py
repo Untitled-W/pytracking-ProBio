@@ -20,6 +20,7 @@ class TensorboardWriter:
         tb_info_writer.close()
 
     def write_epoch(self, stats: OrderedDict, epoch: int, ind=-1):
+        print("Here!")
         for loader_name, loader_stats in stats.items():
             if loader_stats is None:
                 continue

@@ -398,6 +398,72 @@ def generate_formatted_report(row_labels, scores, table_name=''):
     return report_text
 
 
+def print_results_vos(trackers, dataset, report_name, merge_results=False,
+                  plot_types=('success'), **kwargs):
+    """ Print the results for the given trackers in a formatted table
+    args:
+        trackers - List of trackers to evaluate
+        dataset - List of sequences to evaluate
+        report_name - Name of the folder in env_settings.perm_mat_path where the computed results and plots are saved
+        merge_results - If True, multiple random runs for a non-deterministic trackers are averaged
+        plot_types - List of scores to display. Can contain 'success' (prints AUC, OP50, and OP75 scores),
+                    'prec' (prints precision score), and 'norm_prec' (prints normalized precision score)
+    """
+    # Load pre-computed results
+    eval_data = check_and_load_precomputed_results(trackers, dataset, report_name, **kwargs)
+
+    # Merge results from multiple runs
+    if merge_results:
+        eval_data = merge_multiple_runs(eval_data)
+
+    tracker_names = eval_data['trackers']
+    valid_sequence = torch.tensor(eval_data['valid_sequence'], dtype=torch.bool)
+
+    print('\nReporting results over {} / {} sequences'.format(valid_sequence.long().sum().item(), valid_sequence.shape[0]))
+
+    scores = {}
+
+    # ********************************  Success Plot **************************************
+    if 'success' in plot_types:
+        threshold_set_overlap = torch.tensor(eval_data['threshold_set_overlap'])
+        ave_success_rate_plot_overlap = torch.tensor(eval_data['ave_success_rate_plot_overlap'])
+
+        # Index out valid sequences
+        auc_curve, auc = get_auc_curve(ave_success_rate_plot_overlap, valid_sequence)
+        scores['AUC'] = auc
+        scores['OP50'] = auc_curve[:, threshold_set_overlap == 0.50]
+        scores['OP75'] = auc_curve[:, threshold_set_overlap == 0.75]
+
+    # ********************************  Precision Plot **************************************
+    if 'prec' in plot_types:
+        ave_success_rate_plot_center = torch.tensor(eval_data['ave_success_rate_plot_center'])
+
+        # Index out valid sequences
+        prec_curve, prec_score = get_prec_curve(ave_success_rate_plot_center, valid_sequence)
+        scores['Precision'] = prec_score
+
+    # ********************************  Norm Precision Plot *********************************
+    if 'norm_prec' in plot_types:
+        ave_success_rate_plot_center_norm = torch.tensor(eval_data['ave_success_rate_plot_center_norm'])
+
+        # Index out valid sequences
+        norm_prec_curve, norm_prec_score = get_prec_curve(ave_success_rate_plot_center_norm, valid_sequence)
+        scores['Norm Precision'] = norm_prec_score
+
+    if 'f1_prec_rec' in plot_types:
+        names = ['{}_{}'.format(trk['disp_name'], trk['run_id'])
+                 if trk['run_id'] is not None else trk['disp_name']
+                 for trk in tracker_names]
+
+        scores['F1 Scores'] = torch.tensor([eval_data['raw_data'][n]['f1_max'] for n in names])
+
+    # Print
+    tracker_disp_names = [get_tracker_display_name(trk) for trk in tracker_names]
+    report_text = generate_formatted_report(tracker_disp_names, scores, table_name=report_name)
+    print(report_text)
+    
+
+
 def print_results(trackers, dataset, report_name, merge_results=False,
                   plot_types=('success'), **kwargs):
     """ Print the results for the given trackers in a formatted table

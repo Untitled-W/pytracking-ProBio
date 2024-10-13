@@ -193,3 +193,4 @@ class YouTubeVOS(VOSDatasetBase):
         return Sequence(name=seq_name, frames=images, dataset='YouTubeVOS', ground_truth_rect=gt_bboxes,
                         init_data=init_data, ground_truth_seg=gt_segs, object_ids=sequence_info['object_ids'],
                         multiobj_mode=self.multiobj)
+

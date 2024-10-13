@@ -1,6 +1,6 @@
 import torch.nn as nn
 import torch.optim as optim
-from ltr.dataset import Lasot, TrackingNet, MSCOCOSeq, Got10k
+from ltr.dataset import Lasot, TrackingNet, MSCOCOSeq, Got10k, YouTubeVOS
 from ltr.data import processing, sampler, LTRLoader
 import ltr.models.bbreg.atom as atom_models
 from ltr import actors
@@ -11,9 +11,9 @@ import ltr.data.transforms as tfm
 def run(settings):
     # Most common settings are assigned in the settings struct
     settings.description = 'ATOM IoUNet with default settings, but additionally using GOT10k for training.'
-    settings.batch_size = 64
+    settings.batch_size = 256
     settings.num_workers = 8
-    settings.print_interval = 1
+    settings.print_interval = 200
     settings.normalize_mean = [0.485, 0.456, 0.406]
     settings.normalize_std = [0.229, 0.224, 0.225]
     settings.search_area_factor = 5.0
@@ -23,13 +23,15 @@ def run(settings):
     settings.scale_jitter_factor = {'train': 0, 'test': 0.5}
 
     # Train datasets
-    lasot_train = Lasot(settings.env.lasot_dir, split='train')
-    got10k_train = Got10k(settings.env.got10k_dir, split='vottrain')
-    trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
-    coco_train = MSCOCOSeq(settings.env.coco_dir)
+    # lasot_train = Lasot(settings.env.lasot_dir, split='train')
+    got10k_train = Got10k(settings.env.got10k_dir, split='probio_train')
+    # trackingnet_train = TrackingNet(settings.env.trackingnet_dir, set_ids=list(range(4)))
+    # coco_train = MSCOCOSeq(settings.env.coco_dir)
+    # probio = YouTubeVOS(settings.env.ytvos_dir, split='probio')
 
     # Validation datasets
-    got10k_val = Got10k(settings.env.got10k_dir, split='votval')
+    got10k_val = Got10k(settings.env.got10k_dir, split='probio_valid')
+    # probio = YouTubeVOS(settings.env.ytvos_dir, split='probio')
 
     # The joint augmentation transform, that is applied to the pairs jointly
     transform_joint = tfm.Transform(tfm.ToGrayscale(probability=0.05))
@@ -64,7 +66,7 @@ def run(settings):
                                                     joint_transform=transform_joint)
 
     # The sampler for training
-    dataset_train = sampler.ATOMSampler([lasot_train, got10k_train, trackingnet_train, coco_train], [1,1,1,1],
+    dataset_train = sampler.ATOMSampler([got10k_train], [1],
                                 samples_per_epoch=1000*settings.batch_size, max_gap=50, processing=data_processing_train)
 
     # The loader for training
@@ -77,7 +79,7 @@ def run(settings):
 
     # The loader for validation
     loader_val = LTRLoader('val', dataset_val, training=False, batch_size=settings.batch_size, num_workers=settings.num_workers,
-                           shuffle=False, drop_last=True, epoch_interval=5, stack_dim=1)
+                           shuffle=False, drop_last=True, epoch_interval=1, stack_dim=1)
 
     # Create network and actor
     net = atom_models.atom_resnet18(backbone_pretrained=True)

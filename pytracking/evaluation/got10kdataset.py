@@ -20,8 +20,10 @@ class GOT10KDataset(BaseDataset):
     def __init__(self, split, vos_mode=False):
         super().__init__()
         # Split can be test, val, or ltrval (a validation split consisting of videos from the official train set)
-        if split == 'test' or split == 'val':
+        if split == 'test' or split == 'val' or split == 'probio':
             self.base_path = os.path.join(self.env_settings.got10k_path, split)
+        elif split == 'probio_valid':
+            self.base_path = os.path.join(self.env_settings.got10k_path, 'probio')
         else:
             self.base_path = os.path.join(self.env_settings.got10k_path, 'train')
 
@@ -80,4 +82,10 @@ class GOT10KDataset(BaseDataset):
                 seq_ids = f.read().splitlines()
 
             sequence_list = [sequence_list[int(x)] for x in seq_ids]
+        elif split == 'probio_valid':
+            with open('/mnt/data/qizhezhang/pytracking/ltr/data_specs/got10k_probio_valid.txt') as f:
+                seq_ids = f.read().splitlines()
+
+            sequence_list = [sequence_list[int(x)] for x in seq_ids]
+        
         return sequence_list

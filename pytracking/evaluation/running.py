@@ -78,14 +78,24 @@ def _save_tracker_output(seq: Sequence, tracker: Tracker, output: dict):
         exec_times = np.array(data).astype(float)
         np.savetxt(file, exec_times, delimiter='\t', fmt='%f')
 
+    # def _convert_dict(input_dict):
+    #     data_dict = {}
+    #     for elem in input_dict:
+    #         for k, v in elem.items():
+    #             if k in data_dict.keys():
+    #                 data_dict[k].append(v)
+    #             else:
+    #                 data_dict[k] = [v, ]
+    #     return data_dict
+    
     def _convert_dict(input_dict):
-        data_dict = {}
+        data_dict = {i:[] for i in seq.object_ids}
         for elem in input_dict:
-            for k, v in elem.items():
-                if k in data_dict.keys():
-                    data_dict[k].append(v)
+            for i in seq.object_ids:
+                if i in elem.keys():
+                    data_dict[i].append(elem[i])
                 else:
-                    data_dict[k] = [v, ]
+                    data_dict[i].append([-1,-1,-1,-1])
         return data_dict
 
     for key, data in output.items():
@@ -95,6 +105,8 @@ def _save_tracker_output(seq: Sequence, tracker: Tracker, output: dict):
 
         if key == 'target_bbox':
             if isinstance(data[0], (dict, OrderedDict)):
+                if seq.name == '011ac0a06f':
+                    x = 1
                 data_dict = _convert_dict(data)
 
                 for obj_id, d in data_dict.items():
@@ -105,27 +117,27 @@ def _save_tracker_output(seq: Sequence, tracker: Tracker, output: dict):
                 bbox_file = '{}.txt'.format(base_results_path)
                 save_bb(bbox_file, data)
 
-        elif key == 'object_presence_score':
-            if isinstance(data[0], (dict, OrderedDict)):
-                data_dict = _convert_dict(data)
+        # elif key == 'object_presence_score':
+        #     if isinstance(data[0], (dict, OrderedDict)):
+        #         data_dict = _convert_dict(data)
 
-                for obj_id, d in data_dict.items():
-                    scores_file = '{}_{}_object_presence_scores.txt'.format(base_results_path, obj_id)
-                    save_scores(scores_file, d)
-            else:
-                scores_file = '{}_object_presence_scores.txt'.format(base_results_path)
-                save_scores(scores_file, data)
+        #         for obj_id, d in data_dict.items():
+        #             scores_file = '{}_{}_object_presence_scores.txt'.format(base_results_path, obj_id)
+        #             save_scores(scores_file, d)
+        #     else:
+        #         scores_file = '{}_object_presence_scores.txt'.format(base_results_path)
+        #         save_scores(scores_file, data)
 
-        elif key == 'time':
-            if isinstance(data[0], dict):
-                data_dict = _convert_dict(data)
+        # elif key == 'time':
+        #     if isinstance(data[0], dict):
+        #         data_dict = _convert_dict(data)
 
-                for obj_id, d in data_dict.items():
-                    timings_file = '{}_{}_time.txt'.format(base_results_path, obj_id)
-                    save_time(timings_file, d)
-            else:
-                timings_file = '{}_time.txt'.format(base_results_path)
-                save_time(timings_file, data)
+        #         for obj_id, d in data_dict.items():
+        #             timings_file = '{}_{}_time.txt'.format(base_results_path, obj_id)
+        #             save_time(timings_file, d)
+        #     else:
+        #         timings_file = '{}_time.txt'.format(base_results_path)
+        #         save_time(timings_file, data)
 
         elif key == 'segmentation':
             assert len(frame_names) == len(data)
@@ -134,6 +146,8 @@ def _save_tracker_output(seq: Sequence, tracker: Tracker, output: dict):
             for frame_name, frame_seg in zip(frame_names, data):
                 imwrite_indexed(os.path.join(segmentation_path, '{}.png'.format(frame_name)), frame_seg)
 
+def _save_tracker_output_vos(seq: Sequence, tracker: Tracker, output: dict):
+    pass
 
 def run_sequence(seq: Sequence, tracker: Tracker, debug=False, visdom_info=None):
     """Runs a tracker on a sequence."""
@@ -153,20 +167,19 @@ def run_sequence(seq: Sequence, tracker: Tracker, debug=False, visdom_info=None)
 
     visdom_info = {} if visdom_info is None else visdom_info
 
+    print('Tracker: {} {} {} ,  Sequence: {}'.format(tracker.name, tracker.parameter_name, tracker.run_id, seq.name))
     if _results_exist() and not debug:
         print('FPS: {}'.format(-1))
         return
 
-    print('Tracker: {} {} {} ,  Sequence: {}'.format(tracker.name, tracker.parameter_name, tracker.run_id, seq.name))
-
     if debug:
         output = tracker.run_sequence(seq, debug=debug, visdom_info=visdom_info)
     else:
-        try:
-            output = tracker.run_sequence(seq, debug=debug, visdom_info=visdom_info)
-        except Exception as e:
-            print(e)
-            return
+        # try:
+        output = tracker.run_sequence(seq, debug=debug, visdom_info=visdom_info)
+        # except Exception as e:
+        #     print(e,"???")
+        #     return
 
     sys.stdout.flush()
 
@@ -182,6 +195,8 @@ def run_sequence(seq: Sequence, tracker: Tracker, debug=False, visdom_info=None)
     if not debug:
         if seq.dataset == 'oxuva':
             _save_tracker_output_oxuva(seq, tracker, output)
+        elif seq.dataset == 'youtube_vos_sub':
+            _save_tracker_output_vos(seq, tracker, output)
         else:
             _save_tracker_output(seq, tracker, output)
 

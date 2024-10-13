@@ -7,7 +7,7 @@ def parameters():
     params.debug = 0
     params.visualization = False
 
-    params.use_gpu = True
+    params.use_gpu = False
 
     params.train_feature_size = [24, 36]
     params.feature_stride = 16
